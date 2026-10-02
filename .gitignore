@@ -1,0 +1,7 @@
+app/
+build/
+.dart_tool/
+.env.server
+*.apk
+*.keystore
+key.properties

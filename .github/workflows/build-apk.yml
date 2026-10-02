@@ -1,0 +1,41 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      # Optional: keep the keys in GitHub secrets instead of the repo
+      - name: Write .env from secrets
+        if: ${{ secrets.SUPABASE_URL != '' }}
+        run: |
+          printf 'SUPABASE_URL=%s\nSUPABASE_PUBLISHABLE_KEY=%s\n' \
+            "${{ secrets.SUPABASE_URL }}" "${{ secrets.SUPABASE_PUBLISHABLE_KEY }}" > src/.env
+
+      - name: Prepare project
+        run: bash setup.sh
+
+      - name: Build release APK
+        working-directory: app
+        run: flutter build apk --release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: money-out-apk
+          path: app/build/app/outputs/flutter-apk/app-release.apk
